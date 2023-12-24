@@ -12,19 +12,18 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
 </head>
 <body class="antialiased">
-<form action="/create-mosaic" method="post" enctype="multipart/form-data">
+<form action="{{ route('cut-image') }}" method="post" enctype="multipart/form-data">
     @csrf
     <div class="d-flex align-items-start flex-column">
         <div class="p-2">
             <label>Main Image:</label>
-            <input type="file" name="batch_photos" accept="image/*" required>
+            <input type="file" name="img" accept="image/*" required>
 
         </div>
-
-        <div class="p-2">
-            <label>Image Set:</label>
-            <input type="file" name="main_photo[]" accept="image/*" multiple required>
-        </div>
+{{--        <div class="p-2">--}}
+{{--            <label>Image Set:</label>--}}
+{{--            <input type="file" name="main_photo[]" accept="image/*" multiple required>--}}
+{{--        </div>--}}
         <div>
             <div class="p-2">
                 <button class="btn btn-primary" type="submit">Create</button>
