@@ -185,4 +185,6 @@ return [
         // 'Example' => App\Facades\Example::class,
     ])->toArray(),
 
+
+    'max_execution_time' => env('MAX_EXECUTION_TIME', 120),
 ];

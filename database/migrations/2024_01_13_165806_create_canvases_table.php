@@ -1,0 +1,32 @@
+<?php
+
+use App\Enums\Resolution;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('canvases', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('color')->default('black');
+            $table->tinyInteger('resolution')->default(Resolution::R4K->value);
+            $table->string('path');
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('canvases');
+    }
+};

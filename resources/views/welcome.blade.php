@@ -35,6 +35,10 @@
 @if(isset($mosaicImagePath))
     <img src="{{ $mosaicImagePath }}">
 @endif
+@if(isset($storagePath))
+    <img class="shadow-sm p-3 mb-5 bg-white rounded" src="{{ $storagePath }}">
+@endif
+<img src="{{ $img ?? '' }}">
 </body>
 </html>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"
