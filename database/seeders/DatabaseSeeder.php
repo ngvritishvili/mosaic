@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call(
             CategorySeed::class,
+            CanvasSeeder::class,
         );
         // \App\Models\User::factory()->create([
         //     'name' => 'Test User',

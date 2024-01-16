@@ -39,8 +39,8 @@ class MosaicController extends Controller
         return $this->imageService->countPixelColors();
     }
 
-    public function testReq(CanvasStoreRequest $request)
+    public function testReq(Request $request)
     {
-        return $this->imageService->createCanvas($request);
+        return $this->imageService->cropImage();
     }
 }

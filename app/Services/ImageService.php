@@ -400,6 +400,53 @@ class ImageService
 
     }
 
+    public function cropImage()
+    {
+        $image = public_path('storage/testing_imgs/123.jpg');
+        // Load the original image
+        $originalImage = imagecreatefromjpeg($image);
+//        $originalImage = imagecreatefromjpeg('path/to/original/image.jpg');
+
+
+
+// Get the dimensions of the original image
+        $originalWidth = imagesx($originalImage);
+        $originalHeight = imagesy($originalImage);
+
+        dd($originalWidth,$originalHeight);
+// Set the coordinates and dimensions for the crop
+        $cropX = 150;    // X-coordinate of the top-left corner of the crop
+        $cropY = 150;    // Y-coordinate of the top-left corner of the crop
+        $cropWidth = 900;  // Width of the crop
+        $cropHeight = 900; // Height of the crop
+
+//        // Calculate the dimensions for the square crop
+//        $cropSize = min($originalWidth, $originalHeight); // Use the smaller dimension
+//        $cropX = ($originalWidth - $cropSize) / 2;
+//        $cropY = ($originalHeight - $cropSize) / 2;
+
+// Create a new image resource for the cropped image
+        $croppedImage = imagecrop($originalImage, [
+            'x' => $cropX,
+            'y' => $cropY,
+            'width' => $cropWidth,
+            'height' => $cropHeight,
+        ]);
+
+        if ($croppedImage !== false) {
+            // Save or output the cropped image
+            imagejpeg($croppedImage, public_path('storage/images/cropped/img_cropped_old.jpg'));
+
+            // Free up memory by destroying the image resources
+            imagedestroy($originalImage);
+            imagedestroy($croppedImage);
+        } else {
+            // Error handling if cropping fails
+            echo "Image cropping failed.";
+        }
+
+
+    }
     public function clearFolder($path, $prefix)
     {
         // Get all folders in the specified path
