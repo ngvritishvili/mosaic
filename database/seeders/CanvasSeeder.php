@@ -99,6 +99,8 @@ class CanvasSeeder extends Seeder
                 return ['width' => '3840', 'height' => '2160'];
             case 'R8K':
                 return ['width' => '7680', 'height' => '4320'];
+            case 'R12K':
+                return ['width' => '12288', 'height' => '6440'];
         }
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Resolution;
 use App\Http\Requests\CanvasStoreRequest;
 use App\Models\Category;
 use App\Models\ImagesLibrary;
@@ -41,6 +42,8 @@ class MosaicController extends Controller
 
     public function testReq(Request $request)
     {
+//        dd(Resolution::list()->pluck('id')->toArray());
+        dd(Resolution::R4K->value);
         return $this->imageService->cropImage();
     }
 }
