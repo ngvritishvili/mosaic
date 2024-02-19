@@ -14,6 +14,12 @@ class CanvasSeeder extends Seeder
      */
     public function run(): void
     {
+        self::blackCanvas();
+        self::whiteCanvas();
+    }
+
+    private function blackCanvas()
+    {
         // Create a canvas image
 
         foreach (Resolution::cases() as $value) {
@@ -21,7 +27,7 @@ class CanvasSeeder extends Seeder
 
             $canvas = imagecreatetruecolor($resol['width'], $resol['height']);
 
-            $filename = $value->name . '_canvas.jpg'; // Set your desired filename and extension
+            $filename = $value->name . '_black_canvas.jpg'; // Set your desired filename and extension
             $storagePath = 'storage/images/canvases/' . $filename; // Define the storage path
 
 // Save the image to storage
@@ -34,15 +40,50 @@ class CanvasSeeder extends Seeder
 
             Canvas::updateOrCreate(
                 [
-                    'resolution' => $value->value
+                    'resolution' => $value->value,
+                    'color' => 'black'
                 ],
                 [
                     'name' => $filename,
                     'path' => $storagePath,
                     'resolution' => $value->value,
+                    'color' => 'black'
                 ]);
         }
+    }
 
+    private function whiteCanvas()
+    {
+        // Create a canvas image
+
+        foreach (Resolution::cases() as $value) {
+            $resol = $this->resolutionGenerate($value->name);
+
+            $canvas = imagecreatetruecolor($resol['width'], $resol['height']);
+
+            $filename = $value->name . '_white_canvas.jpg'; // Set your desired filename and extension
+            $storagePath = 'storage/images/canvases/' . $filename; // Define the storage path
+
+// Save the image to storage
+
+// Set canvas background color (optional)
+            $backgroundColor = imagecolorallocate($canvas, 255, 255, 255);
+            imagefill($canvas, 0, 0, $backgroundColor);
+            imagejpeg($canvas, public_path($storagePath));
+            imagedestroy($canvas);
+
+            Canvas::updateOrCreate(
+                [
+                    'resolution' => $value->value,
+                    'color' => 'white'
+                ],
+                [
+                    'name' => $filename,
+                    'path' => $storagePath,
+                    'resolution' => $value->value,
+                    'color' => 'white',
+                ]);
+        }
     }
 
     private function resolutionGenerate($resolution)
@@ -58,6 +99,8 @@ class CanvasSeeder extends Seeder
                 return ['width' => '3840', 'height' => '2160'];
             case 'R8K':
                 return ['width' => '7680', 'height' => '4320'];
+            case 'R12K':
+                return ['width' => '12288', 'height' => '6440'];
         }
     }
 

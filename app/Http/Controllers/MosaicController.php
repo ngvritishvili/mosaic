@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Resolution;
 use App\Http\Requests\CanvasStoreRequest;
 use App\Models\Category;
 use App\Models\ImagesLibrary;
@@ -39,8 +40,10 @@ class MosaicController extends Controller
         return $this->imageService->countPixelColors();
     }
 
-    public function testReq(CanvasStoreRequest $request)
+    public function testReq(Request $request)
     {
-        return $this->imageService->createCanvas($request);
+//        dd(Resolution::list()->pluck('id')->toArray());
+        dd(Resolution::R4K->value);
+        return $this->imageService->cropImage();
     }
 }

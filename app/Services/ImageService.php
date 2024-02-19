@@ -2,10 +2,12 @@
 
 namespace App\Services;
 
+use App\Enums\Resolution;
 use App\Http\Requests\CanvasStoreRequest;
 use App\Models\Canvas;
 use App\Models\Category;
 use App\Models\ImagesLibrary;
+use App\Models\MainImage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -86,14 +88,16 @@ class ImageService
         $originalWidth = imagesx($originalImage);
         $originalHeight = imagesy($originalImage);
 
+        $widthPieceCount = 60;
+        $heightPieceCount = 60;
 // Calculate the width and height of each piece
-        $pieceWidth = $originalWidth / 10;  // Assuming 10 columns
-        $pieceHeight = $originalHeight / 10; // Assuming 10 rows
+        $pieceWidth = $originalWidth / $widthPieceCount;  // Assuming 60 columns
+        $pieceHeight = $originalHeight / $heightPieceCount; // Assuming 50 rows
 //        dd($originalWidth,$originalHeight,$pieceWidth,$pieceHeight);
 // Loop through rows
-        for ($row = 0; $row < 10; $row++) {
+        for ($row = 0; $row < $widthPieceCount; $row++) {
             // Loop through columns
-            for ($col = 0; $col < 10; $col++) {
+            for ($col = 0; $col < $originalHeight; $col++) {
                 // Create a new image for each piece
                 $piece = imagecreatetruecolor($pieceWidth, $pieceHeight);
 
@@ -103,7 +107,20 @@ class ImageService
                 // Save or output the individual piece (adjust as needed)
                 $pieceFileName = 'storage/images/pieces/piece_' . $row . '_' . $col . '.jpg';
 
-                $fie = imagejpeg($piece, $pieceFileName);
+                $file = imagejpeg($piece, $pieceFileName);
+
+                $imageData = self::checkImgCountPixel([$file]);
+                // Move the batch photo to the public/uploads directory
+                $file->move(public_path('storage/images/main_pieces'), $pieceFileName);
+
+                MainImage::create([
+                    'position_x' => $pieceFileName,
+                    'position_y' => 'storage/images/main_pieces/' . $pieceFileName,
+                    'resolution' => Resolution::findById($request->resolution),
+                    'dark_range' => $imageData['dark_range'],
+                    'medium_range' => $imageData['medium_range'],
+                    'light_range' => $imageData['light_range'],
+                ]);
 
 
                 // Destroy the piece to free up memory
@@ -402,6 +419,53 @@ class ImageService
 
     }
 
+    public function cropImage()
+    {
+        $image = public_path('storage/testing_imgs/123.jpg');
+        // Load the original image
+        $originalImage = imagecreatefromjpeg($image);
+//        $originalImage = imagecreatefromjpeg('path/to/original/image.jpg');
+
+
+
+// Get the dimensions of the original image
+        $originalWidth = imagesx($originalImage);
+        $originalHeight = imagesy($originalImage);
+
+        dd($originalWidth,$originalHeight);
+// Set the coordinates and dimensions for the crop
+        $cropX = 150;    // X-coordinate of the top-left corner of the crop
+        $cropY = 150;    // Y-coordinate of the top-left corner of the crop
+        $cropWidth = 900;  // Width of the crop
+        $cropHeight = 900; // Height of the crop
+
+//        // Calculate the dimensions for the square crop
+//        $cropSize = min($originalWidth, $originalHeight); // Use the smaller dimension
+//        $cropX = ($originalWidth - $cropSize) / 2;
+//        $cropY = ($originalHeight - $cropSize) / 2;
+
+// Create a new image resource for the cropped image
+        $croppedImage = imagecrop($originalImage, [
+            'x' => $cropX,
+            'y' => $cropY,
+            'width' => $cropWidth,
+            'height' => $cropHeight,
+        ]);
+
+        if ($croppedImage !== false) {
+            // Save or output the cropped image
+            imagejpeg($croppedImage, public_path('storage/images/cropped/img_cropped_old.jpg'));
+
+            // Free up memory by destroying the image resources
+            imagedestroy($originalImage);
+            imagedestroy($croppedImage);
+        } else {
+            // Error handling if cropping fails
+            echo "Image cropping failed.";
+        }
+
+
+    }
     public function clearFolder($path, $prefix)
     {
         // Get all folders in the specified path

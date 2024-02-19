@@ -13,4 +13,5 @@ enum Resolution: int
     case R2K = 3;
     case R4K = 4;
     case R8K = 5;
+    case R12K = 6;
 }

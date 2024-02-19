@@ -22,10 +22,10 @@ class CanvasStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'width' => 'sometimes|numeric|between:1280,8192',
-            'height' => 'sometimes|numeric|between:720,4320',
-            'bg_color' => 'sometimes|string',
-            'resolution' => 'string|required_without:width,height'
+//            'width' => 'sometimes|numeric|between:1280,8192',
+//            'height' => 'sometimes|numeric|between:720,4320',
+//            'bg_color' => 'sometimes|string',
+//            'resolution' => 'string|required_without:width,height'
         ];
     }
 }
