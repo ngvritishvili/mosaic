@@ -398,6 +398,8 @@ class ImageService
         imagedestroy($originalImage);
         imagedestroy($resizedImage);
 
+        return $resizedImage;
+
     }
 
     public function clearFolder($path, $prefix)
