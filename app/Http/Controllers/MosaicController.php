@@ -35,6 +35,11 @@ class MosaicController extends Controller
     {
         return $this->imageService->importImg();
     }
+
+    public function importMainImg(Request $request)
+    {
+        return $this->imageService->importMainImg($request);
+    }
     public function countPixelColors()
     {
         return $this->imageService->countPixelColors();

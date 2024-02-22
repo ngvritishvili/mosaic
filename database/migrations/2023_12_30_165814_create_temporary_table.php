@@ -21,6 +21,8 @@ return new class extends Migration
             $table->float('dark_range');
             $table->float('medium_range');
             $table->float('light_range');
+            $table->string('filename');
+            $table->string('path');
             $table->timestamps();
         });
     }

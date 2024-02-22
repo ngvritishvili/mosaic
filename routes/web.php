@@ -25,7 +25,7 @@ Route::post('/create-mosaic', [MosaicController::class, 'createMosaic']);
  */
 
 Route::get('/cut-image', [MosaicController::class, 'show']);
-Route::post('/cut-image', [MosaicController::class, 'cutImage'])->name('cut-image');
+Route::post('/cut-image', [MosaicController::class, 'importMainImg'])->name('cut-image');
 
 Route::get('/import_images', [MosaicController::class, 'importImg'])->name('importImg');
 Route::post('/import_images', [MosaicController::class, 'importBatchPhotos'])->name('importBatchPhotos');
