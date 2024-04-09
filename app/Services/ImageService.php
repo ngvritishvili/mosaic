@@ -79,56 +79,62 @@ class ImageService
         return;
     }
 
-    public function cutImage(Request $request)
+    public function importMainImg(Request $request)
     {
-        // Load the original image
+
+//        $fileCount = count(Storage::allFiles('public/images/main_pieces'));
+//        dd($fileCount);
+
         $originalImage = imagecreatefromjpeg($request->file('img'));
 
 // Get the dimensions of the original image
         $originalWidth = imagesx($originalImage);
         $originalHeight = imagesy($originalImage);
 
-        $widthPieceCount = 60;
-        $heightPieceCount = 60;
+        $widthPieceCount = ($request->resolution < Resolution::R12K->value) ? 60 : 90;
+        $heightPieceCount = ($request->resolution < Resolution::R12K->value) ? 50 : 75;;
 // Calculate the width and height of each piece
         $pieceWidth = $originalWidth / $widthPieceCount;  // Assuming 60 columns
         $pieceHeight = $originalHeight / $heightPieceCount; // Assuming 50 rows
-//        dd($originalWidth,$originalHeight,$pieceWidth,$pieceHeight);
-// Loop through rows
-        for ($row = 0; $row < $widthPieceCount; $row++) {
-            // Loop through columns
-            for ($col = 0; $col < $originalHeight; $col++) {
+
+        // Loop through rows
+        for ($row = 1; $row <= $widthPieceCount; $row++) {
+            // Loop through columns (corrected loop bounds)
+            for ($col = 1; $col <= $heightPieceCount; $col++) {
                 // Create a new image for each piece
                 $piece = imagecreatetruecolor($pieceWidth, $pieceHeight);
 
                 // Copy the corresponding portion from the original image
                 imagecopy($piece, $originalImage, 0, 0, $col * $pieceWidth, $row * $pieceHeight, $pieceWidth, $pieceHeight);
 
-                // Save or output the individual piece (adjust as needed)
-                $pieceFileName = 'storage/images/pieces/piece_' . $row . '_' . $col . '.jpg';
+                // Save the individual piece (adjust as needed)
+                $pieceFilePath = 'storage/images/main_pieces/piece_' . $row . '_' . $col . '.jpg';
+                $pieceFileName = 'piece_' . $row . '_' . $col . '.jpg';
+                imagejpeg($piece, $pieceFilePath);
 
-                $file = imagejpeg($piece, $pieceFileName);
+                $imageData = self::checkImgCountPixel([$pieceFilePath]);
 
-                $imageData = self::checkImgCountPixel([$file]);
-                // Move the batch photo to the public/uploads directory
-                $file->move(public_path('storage/images/main_pieces'), $pieceFileName);
-
-                MainImage::create([
-                    'position_x' => $pieceFileName,
-                    'position_y' => 'storage/images/main_pieces/' . $pieceFileName,
-                    'resolution' => Resolution::findById($request->resolution),
+                $mainImage = MainImage::create([
+                    'position_x' => $row,
+                    'position_y' => $col,
+                    'resolution' => Resolution::tryFrom($request->resolution)->value,
                     'dark_range' => $imageData['dark_range'],
                     'medium_range' => $imageData['medium_range'],
                     'light_range' => $imageData['light_range'],
+                    'filename' => $pieceFileName,
+                    'path' => $pieceFilePath,
+                ]);
+//
+                \DB::table('image_params')->insert([
+                    'main_id' => $mainImage->id,
+                    'width' => $pieceWidth,
+                    'height' => $pieceHeight,
                 ]);
 
-
-                // Destroy the piece to free up memory
                 imagedestroy($piece);
             }
         }
 
-// Destroy the original image
         imagedestroy($originalImage);
 
     }
@@ -249,30 +255,7 @@ class ImageService
         return $imageUrls;
     }
 
-    public function importBatchPhotos(Request $request): RedirectResponse
-    {
-        set_time_limit(config('app.max_execution_time'));
 
-        foreach ($request->file('batch_photos') as $key => $batchPhoto) {
-            // Create a unique filename for each batch photo
-            $batchPhotoName = 'none' . '_' . time() . '.' . $batchPhoto->extension();
-
-            $imageData = self::checkImgCountPixel([$batchPhoto]);
-            // Move the batch photo to the public/uploads directory
-            $batchPhoto->move(public_path('storage/images/library'), $batchPhotoName);
-
-            ImagesLibrary::create([
-                'filename' => $batchPhotoName,
-                'path' => 'storage/images/library/' . $batchPhotoName,
-                'category_id' => $request->category_id ?? Category::where('name', 'none')->first()->id,
-                'dark_range' => $imageData['dark_range'],
-                'medium_range' => $imageData['medium_range'],
-                'light_range' => $imageData['light_range'],
-            ]);
-        }
-
-        return back()->with('message', 'Successfully Imported!');
-    }
 
     public function importImg()
     {
@@ -282,7 +265,7 @@ class ImageService
     private function checkImgCountPixel($file)
     {
         // Load the image (assuming it's a JPEG, adjust accordingly)
-        $image = imagecreatefromjpeg($file[0]);
+        $image = imagecreatefromjpeg(public_path($file[0]));
 
         // Get the image dimensions
         $width = imagesx($image);
@@ -389,35 +372,91 @@ class ImageService
         imagedestroy($image2);
     }
 
-    private function resizeImage($image, $newWidth = 300, $newHeight = 200)
+    public function importBatchPhotos(Request $request): RedirectResponse
     {
-// Path to the original image
-        $originalImagePath = public_path('path/to/original/image.jpg');
+        set_time_limit(config('app.max_execution_time'));
 
-// Load the original image
-        $originalImage = imagecreatefromjpeg($originalImagePath);
+        foreach ($request->file('batch_photos') as $key => $batchPhoto) {
+            // Create a unique filename for each batch photo
+            $batchPhotoName = 'none' . '_' . time() . '.' . $batchPhoto->extension();
 
-// Get the original image dimensions
-        $originalWidth = imagesx($originalImage);
-        $originalHeight = imagesy($originalImage);
+            $imageData = self::checkImgCountPixel([$batchPhoto]);
+            // Move the batch photo to the public/uploads directory
+            $batchPhoto->move(public_path('storage/images/images_lib'), $batchPhotoName);
 
-// Create a new canvas for the resized image
+            ImagesLibrary::create([
+                'filename' => $batchPhotoName,
+                'path' => 'storage/images/library/' . $batchPhotoName,
+                'category_id' => $request->category_id ?? Category::where('name', 'none')->first()->id,
+                'dark_range' => $imageData['dark_range'],
+                'medium_range' => $imageData['medium_range'],
+                'light_range' => $imageData['light_range'],
+            ]);
+        }
+
+        return back()->with('message', 'Successfully Imported!');
+    }
+
+    function resizeImage($imagePath, $newWidth = 62, $newHeight = 42)
+    {
+        // Load the original image
+        list($originalWidth, $originalHeight) = getimagesize($imagePath);
+
+        // Determine the source image type
+        $extension = strtolower(pathinfo($imagePath, PATHINFO_EXTENSION));
+        switch ($extension) {
+            case 'jpeg':
+            case 'jpg':
+                $originalImage = imagecreatefromjpeg($imagePath);
+                break;
+            case 'png':
+                $originalImage = imagecreatefrompng($imagePath);
+                break;
+            case 'gif':
+                $originalImage = imagecreatefromgif($imagePath);
+                break;
+            default:
+                // Handle unsupported image format (throw an exception or return an error)
+                return false;
+        }
+
+        // Create a new resized image
         $resizedImage = imagecreatetruecolor($newWidth, $newHeight);
 
-// Resize the original image to fit the new canvas
+        // Preserve transparency for PNG and GIF images
+        if ($extension === 'png' || $extension === 'gif') {
+            imagealphablending($resizedImage, false);
+            imagesavealpha($resizedImage, true);
+        }
+
+        // Resize the image
         imagecopyresampled($resizedImage, $originalImage, 0, 0, 0, 0, $newWidth, $newHeight, $originalWidth, $originalHeight);
 
-// Save or display the resized image
-        $resizedImagePath = public_path('path/to/save/resized/image.jpg');
-        imagejpeg($resizedImage, $resizedImagePath);
+        // Output or save the resized image
+        $outputPath = 'storage/images/library/resized_image.jpg'; // Adjust the output path as needed
 
-// Free up memory
+        // Choose the desired output format and quality
+        switch ($extension) {
+            case 'jpeg':
+            case 'jpg':
+                imagejpeg($resizedImage, $outputPath, 90); // 90 is a typical JPEG quality
+                break;
+            case 'png':
+                imagepng($resizedImage, $outputPath);
+                break;
+            case 'gif':
+                imagegif($resizedImage, $outputPath);
+                break;
+        }
+
+        // Free up memory
         imagedestroy($originalImage);
         imagedestroy($resizedImage);
 
         return $resizedImage;
 
     }
+
 
     public function cropImage()
     {
@@ -427,12 +466,11 @@ class ImageService
 //        $originalImage = imagecreatefromjpeg('path/to/original/image.jpg');
 
 
-
 // Get the dimensions of the original image
         $originalWidth = imagesx($originalImage);
         $originalHeight = imagesy($originalImage);
 
-        dd($originalWidth,$originalHeight);
+        dd($originalWidth, $originalHeight);
 // Set the coordinates and dimensions for the crop
         $cropX = 150;    // X-coordinate of the top-left corner of the crop
         $cropY = 150;    // Y-coordinate of the top-left corner of the crop
@@ -466,6 +504,7 @@ class ImageService
 
 
     }
+
     public function clearFolder($path, $prefix)
     {
         // Get all folders in the specified path
@@ -483,6 +522,7 @@ class ImageService
 
         // Storage::deleteDirectory($folderPath);
     }
+
     private function resolutionGenerate($resolution)
     {
         switch ($resolution) {

@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+@php use App\Enums\Resolution; @endphp
+    <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
@@ -20,10 +21,17 @@
             <input type="file" name="img" accept="image/*" required>
 
         </div>
-{{--        <div class="p-2">--}}
-{{--            <label>Image Set:</label>--}}
-{{--            <input type="file" name="main_photo[]" accept="image/*" multiple required>--}}
-{{--        </div>--}}
+        <div class="p-2">
+            <label>Resolutions</label>
+            <select name="resolution">
+                <option selected value="4">R4K</option>
+                @foreach(Resolution::cases() as $resolution)
+                    <option value="{{ $resolution->value }}">{{ $resolution->name }}</option>
+
+
+                @endforeach
+            </select>
+        </div>
         <div>
             <div class="p-2">
                 <button class="btn btn-primary" type="submit">Create</button>
